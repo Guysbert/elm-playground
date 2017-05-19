@@ -43,17 +43,16 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
         ChangeA value ->
-            let 
-                valueAsInt = Result.withDefault 0 (String.toInt value)
-            in
-                ( {model | a = valueAsInt } , Cmd.none)
+            ({ model | a = parseSummand value }, Cmd.none)
         ChangeB value ->
-            let
-              valueAsInt = Result.withDefault 0 (String.toInt value)
-            in
-              ( {model | b = valueAsInt}, Cmd.none)
+            ({ model | b = parseSummand value }, Cmd.none)
         Sum ->
-            ( {model | c = model.a + model.b}, Cmd.none)
+            ({ model | c = model.a + model.b }, Cmd.none)
+
+
+parseSummand : String -> Int
+parseSummand =
+    String.toInt >> Result.withDefault 0
 
 
 --Subscriptions
