@@ -39,8 +39,8 @@ type alias Flags =
 
 
 calculateAbsoluteInterest : Float -> Float -> Float
-calculateAbsoluteInterest value interest =
-    (value / interest * 100)
+calculateAbsoluteInterest restSum interest =
+    (restSum / 12) * (interest/100)
 
 
 calculateRates : List Rate -> Date -> Float -> Float -> Float -> List Rate
@@ -48,17 +48,17 @@ calculateRates rates date restBefore interest annuity =
     if restBefore > 0 then
         List.append 
             [ { number = (List.length rates) + 1
-              , date = Date.Extra.Duration.add Date.Extra.Duration.Day 1 date
+              , date = Date.Extra.Duration.add Date.Extra.Duration.Day 2 date
               , restBefore = restBefore
               , annuity = annuity
               , yearlyClearance = 0
               , payment = annuity
-              , clearance = annuity - (calculateAbsoluteInterest annuity interest)
-              , interest = calculateAbsoluteInterest annuity interest
+              , clearance = annuity - (calculateAbsoluteInterest restBefore interest)
+              , interest = calculateAbsoluteInterest restBefore interest
               , restAfter = restBefore - annuity
               }
             ]
-            (calculateRates rates (Date.Extra.Duration.add Date.Extra.Duration.Day 1 date) (restBefore - annuity) (calculateAbsoluteInterest annuity interest) annuity)
+            (calculateRates rates (Date.Extra.Duration.add Date.Extra.Duration.Day 1 date) (restBefore - annuity) interest annuity)
     else
         rates
 
@@ -78,8 +78,8 @@ renderRow rate =
         , td [] [ text (toString rate.yearlyClearance) ]
         , td [] [ text (toString rate.payment) ]
         , td [] [ text (toString rate.clearance) ]
-        , td [] [ text (toString rate.interest) ]
         , td [] []
+        , td [] [ text (toString rate.interest) ]
         , td [] [ text (toString rate.restAfter) ]
         ]
 
@@ -87,11 +87,11 @@ renderRow rate =
 init : Flags -> ( Model, Cmd Msg )
 init flags =
     ( { startDate = stringToDate flags
-      , loan = 100000
+      , loan = 30000
       , interest = 3
       , annuity = 200
       , yearlyClearance = 10000
-      , rates = []
+      , rates = calculateRates [] (stringToDate flags) 30000 3 200
       }
     , Cmd.none
     )
@@ -199,19 +199,19 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ChangeStartDate value ->
-            ( { model | startDate = (stringToDate value), rates = calculateRates model.rates model.startDate model.loan model.interest model.annuity }, Cmd.none )
+            ( { model | startDate = (stringToDate value), rates = calculateRates [] model.startDate model.loan model.interest model.annuity }, Cmd.none )
 
         ChangeAnnuity value ->
-            ( { model | annuity = (stringToFloat value), rates = calculateRates model.rates model.startDate model.loan model.interest model.annuity }, Cmd.none )
+            ( { model | annuity = (stringToFloat value), rates = calculateRates [] model.startDate model.loan model.interest (stringToFloat value) }, Cmd.none )
 
         ChangeLoan value ->
-            ( { model | loan = (stringToFloat value), rates = calculateRates model.rates model.startDate model.loan model.interest model.annuity }, Cmd.none )
+            ( { model | loan = (stringToFloat value), rates = calculateRates [] model.startDate (stringToFloat value) model.interest model.annuity }, Cmd.none )
 
         ChangeInterest value ->
-            ( { model | interest = (stringToFloat value), rates = calculateRates model.rates model.startDate model.loan model.interest model.annuity }, Cmd.none )
+            ( { model | interest = (stringToFloat value), rates = calculateRates [] model.startDate model.loan (stringToFloat value) model.annuity }, Cmd.none )
 
         ChangeClearance value ->
-            ( { model | yearlyClearance = (stringToFloat value), rates = calculateRates model.rates model.startDate model.loan model.interest model.annuity }, Cmd.none )
+            ( { model | yearlyClearance = (stringToFloat value), rates = calculateRates [] model.startDate model.loan model.interest model.annuity }, Cmd.none )
 
 
 stringToFloat : String -> Float
