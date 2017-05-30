@@ -69,8 +69,11 @@ makePayment payment =
         absoluteInterest =
             (payment.restBefore / 12) * (payment.interest / 100)
 
+        clearance =
+            payment.annuity - absoluteInterest
+
         nextRest =
-            payment.restBefore - payment.annuity
+            payment.restBefore - clearance
 
         nextRate =
             { number = nextNumber
@@ -79,17 +82,25 @@ makePayment payment =
             , annuity = payment.annuity
             , yearlyClearance = 0
             , payment = payment.annuity
-            , clearance = payment.annuity - absoluteInterest
+            , clearance = clearance
             , interest = absoluteInterest
             , restAfter = nextRest
             }
     in
-    { rates = Array.push nextRate payment.rates
-    , date = nextDate
-    , restBefore = nextRest
-    , interest = payment.interest
-    , annuity = payment.annuity
-    }
+    if clearance > 0 then
+        { rates = Array.push nextRate payment.rates
+        , date = nextDate
+        , restBefore = nextRest
+        , interest = payment.interest
+        , annuity = payment.annuity
+        }
+    else
+        { rates = Array.empty
+        , date = nextDate
+        , restBefore = 0
+        , interest = payment.interest
+        , annuity = payment.annuity
+        }
 
 
 calculateRates : Payment -> List Rate

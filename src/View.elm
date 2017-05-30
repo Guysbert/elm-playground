@@ -8,8 +8,8 @@ import Html.Events exposing (..)
 import Types exposing (..)
 
 
-renderRow : Rate -> Html Msg
-renderRow rate =
+renderRateRow : Rate -> Html Msg
+renderRateRow rate =
     tr []
         [ td [] [ text (toString rate.number) ]
         , td [] [ text (dateToString rate.date) ]
@@ -24,9 +24,24 @@ renderRow rate =
         ]
 
 
-renderRates : List Rate -> List (Html Msg)
-renderRates rates =
-    List.map renderRow rates
+renderRateTable : List Rate -> Html Msg
+renderRateTable rates =
+    table []
+        ([ tr []
+            [ th [] [ text "Nr" ]
+            , th [] [ text "Datum" ]
+            , th [] [ text "Restschuld vorher" ]
+            , th [] [ text "Annuität" ]
+            , th [] [ text "Sondertilgung" ]
+            , th [] [ text "Zahlungsbetrag" ]
+            , th [] [ text "Tilgung" ]
+            , th [] [ text "Tigung %" ]
+            , th [] [ text "Zinsen" ]
+            , th [] [ text "Restschuld nachher" ]
+            ]
+         ]
+            ++ List.map renderRateRow rates
+        )
 
 
 dateToString : Date -> String
@@ -34,67 +49,27 @@ dateToString value =
     format "%Y-%m-01" value
 
 
+renderInputField : String -> String -> String -> String -> (String -> Msg) -> Html Msg
+renderInputField id_ name presetValue type__ onInputMsg =
+    div [ class "clearfix" ]
+        [ div [ class "col col-3" ]
+            [ label [ for id_ ] [ text name ]
+            ]
+        , div [ class "col col-3" ]
+            [ input [ id id_, type_ type__, value presetValue, onInput onInputMsg ] []
+            ]
+        ]
+
+
 view : Model -> Html Msg
 view model =
     div [ class "clearfix" ]
         [ h1 [] [ text "Tilgungsrechner" ]
+        , renderInputField "start-date" "Beginn" (dateToString model.startDate) "date" ChangeStartDate
+        , renderInputField "loan" "Darlehen" (toString model.loan) "number" ChangeLoan
+        , renderInputField "interest" "Zinssatz(%)" (toString model.interest) "number" ChangeInterest
+        , renderInputField "annuity" "Annuität" (toString model.annuity) "number" ChangeAnnuity
+        , renderInputField "yearly-clearance" "Jährliche Tilgung" (toString model.yearlyClearance) "number" ChangeClearance
         , div [ class "clearfix" ]
-            [ div [ class "col col-3" ]
-                [ label [ for "start-date" ] [ text "Beginn" ]
-                ]
-            , div [ class "col col-3" ]
-                [ input [ id "start-date", type_ "date", value (dateToString model.startDate), onInput ChangeStartDate ] []
-                ]
-            ]
-        , div [ class "clearfix" ]
-            [ div [ class "col col-3" ]
-                [ label [ for "loan" ] [ text "Darlehen" ]
-                ]
-            , div [ class "col col-3" ]
-                [ input [ id "loan", type_ "number", value (toString model.loan), onInput ChangeLoan ] []
-                ]
-            ]
-        , div [ class "clearfix" ]
-            [ div [ class "col col-3" ]
-                [ label [ for "interest" ] [ text "Zinssatz(%)" ]
-                ]
-            , div [ class "col col-3" ]
-                [ input [ id "interest", type_ "number", value (toString model.interest), onInput ChangeInterest ] []
-                ]
-            ]
-        , div [ class "clearfix" ]
-            [ div [ class "col col-3" ]
-                [ label [ for "annuity" ] [ text "Annuität" ]
-                ]
-            , div [ class "col col-3" ]
-                [ input [ id "annuity", type_ "number", value (toString model.annuity), onInput ChangeAnnuity ] []
-                ]
-            ]
-        , div [ class "clearfix" ]
-            [ div [ class "col col-3" ]
-                [ label [ for "yearly-clearance" ] [ text "Jährliche Tilgung" ]
-                ]
-            , div [ class "col col-3" ]
-                [ input [ id "yearly-clearance", type_ "number", value (toString model.yearlyClearance), onInput ChangeClearance ] []
-                ]
-            ]
-        , div [ class "clearfix" ]
-            [ table []
-                (List.append
-                    [ tr []
-                        [ th [] [ text "Nr" ]
-                        , th [] [ text "Datum" ]
-                        , th [] [ text "Restschuld vorher" ]
-                        , th [] [ text "Annuität" ]
-                        , th [] [ text "Sondertilgung" ]
-                        , th [] [ text "Zahlungsbetrag" ]
-                        , th [] [ text "Tilgung" ]
-                        , th [] [ text "Tigung %" ]
-                        , th [] [ text "Zinsen" ]
-                        , th [] [ text "Restschuld nachher" ]
-                        ]
-                    ]
-                    (renderRates model.rates)
-                )
-            ]
+            [ renderRateTable model.rates ]
         ]
